@@ -5,13 +5,14 @@ import java.awt.*;
 
 public class GameCanvas extends JPanel {
 
-    private MainCircles controller;
+    private final MainCircles controller;
     long lastFrameTime;
     private static final int FPS_SLEEP_TIME = 17;
 
     GameCanvas(MainCircles controller) {
         this.controller = controller;
         lastFrameTime = System.nanoTime();
+        addMouseListener(controller);
     }
 
     @Override
@@ -29,9 +30,21 @@ public class GameCanvas extends JPanel {
         repaint();                              // }
     }
 
-    public int getLeft() { return 0; }
-    public int getRight() { return getWidth() - 1; }
-    public int getTop() { return 0; }
-    public int getBottom() { return getHeight() - 1; }
+
+    public int getLeft() {
+        return 0;
+    }
+
+    public int getRight() {
+        return getWidth() - 1;
+    }
+
+    public int getTop() {
+        return 0;
+    }
+
+    public int getBottom() {
+        return getHeight() - 1;
+    }
 
 }

@@ -2,17 +2,23 @@ package ru.geekbrains.advancedjava;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 
-public class MainCircles extends JFrame {
+import static java.awt.event.MouseEvent.BUTTON1;
+import static java.awt.event.MouseEvent.BUTTON3;
+
+public class MainCircles extends JFrame implements MouseListener {
     private static final int POS_X = 400;
     private static final int POS_Y = 200;
     private static final int WINDOW_WIDTH = 800;
     private static final int WINDOW_HEIGHT = 600;
 
-    Sprite[] sprites = new Sprite[10];
+    private Background background;
+    private SpriteHolder spriteHolder;
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new MainCircles());
+        SwingUtilities.invokeLater(MainCircles::new);
     }
 
     private MainCircles() {
@@ -23,12 +29,12 @@ public class MainCircles extends JFrame {
         initApplication();
         setTitle("Circles");
         setVisible(true);
+
     }
 
     private void initApplication() {
-        for (int i = 0; i < sprites.length; i++) {
-            sprites[i] = new Ball();
-        }
+        background = new Background();
+        spriteHolder = new SpriteHolder();
     }
 
     public void onDrawFrame(GameCanvas canvas, Graphics g, float deltaTime) {
@@ -37,14 +43,41 @@ public class MainCircles extends JFrame {
     }
 
     private void update(GameCanvas canvas, float deltaTime) {
-        for (int i = 0; i < sprites.length; i++) {
-            sprites[i].update(canvas, deltaTime);
-        }
+        spriteHolder.update(canvas, deltaTime);
+        background.update(canvas, deltaTime);
     }
 
     private void render(GameCanvas canvas, Graphics g) {
-        for (int i = 0; i < sprites.length; i++) {
-            sprites[i].render(canvas, g);
+        spriteHolder.render(canvas, g);
+        background.render(canvas, g);
+    }
+
+    @Override
+    public void mouseClicked(MouseEvent e) {
+        switch (e.getButton()) {
+            case BUTTON1 -> spriteHolder.addSprite(e.getPoint());
+            case BUTTON3 -> spriteHolder.removeLast();
+            default -> System.out.println(e.getButton());
         }
+    }
+
+    @Override
+    public void mousePressed(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mouseReleased(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mouseEntered(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mouseExited(MouseEvent e) {
+
     }
 }

@@ -32,6 +32,15 @@ public class Sprite {
     protected void setBottom(float bottom) {
         y = bottom - halfHeight;
     }
+
+    public void setX(float x) {
+        this.x = x;
+    }
+
+    public void setY(float y) {
+        this.y = y;
+    }
+
     protected float getWidth() {
         return 2f * halfWidth;
     }
