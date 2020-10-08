@@ -1,4 +1,4 @@
-package ru.geekbrains.advancedjava;
+package ru.geekbrains.advancedjava.lesson1;
 
 import java.awt.*;
 
@@ -10,13 +10,15 @@ public class Ball extends Sprite {
     Ball() {
         halfHeight = 20 + (float) (Math.random() * 50f);
         halfWidth = halfHeight;
-        color = new Color(
-                (int) (Math.random() * 255), // R
-                (int) (Math.random() * 255), // G
-                (int) (Math.random() * 255)  // B
-        );
+        color = ColorUtils.getRandomColor();
         vX = (float) (100f + (Math.random() * 200f));
         vY = (float) (100f + (Math.random() * 200f));
+    }
+
+    Ball(Point point) {
+        this();
+        this.setX((float) point.getX());
+        this.setY((float) point.getY());
     }
 
     @Override
