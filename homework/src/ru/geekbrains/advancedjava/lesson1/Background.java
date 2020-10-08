@@ -1,8 +1,8 @@
-package ru.geekbrains.advancedjava;
+package ru.geekbrains.advancedjava.lesson1;
 
 import java.awt.*;
 
-public class Background {
+public class Background extends Sprite {
 
     private static final int UPDATE_COLOR_SEC = 5;
     private Color color;
@@ -13,6 +13,7 @@ public class Background {
         this.deltaTimer = 0f;
     }
 
+    @Override
     public void update(GameCanvas canvas, float deltaTime) {
         deltaTimer += deltaTime;
         if (deltaTimer > UPDATE_COLOR_SEC) {
@@ -21,6 +22,7 @@ public class Background {
         }
     }
 
+    @Override
     public void render(GameCanvas canvas, Graphics g) {
         canvas.setBackground(color);
     }

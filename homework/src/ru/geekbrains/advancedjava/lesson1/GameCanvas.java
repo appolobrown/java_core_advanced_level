@@ -1,4 +1,4 @@
-package ru.geekbrains.advancedjava;
+package ru.geekbrains.advancedjava.lesson1;
 
 import javax.swing.*;
 import java.awt.*;
@@ -12,7 +12,6 @@ public class GameCanvas extends JPanel {
     GameCanvas(MainCircles controller) {
         this.controller = controller;
         lastFrameTime = System.nanoTime();
-        addMouseListener(controller);
     }
 
     @Override

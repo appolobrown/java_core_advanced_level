@@ -1,4 +1,4 @@
-package ru.geekbrains.advancedjava;
+package ru.geekbrains.advancedjava.lesson1;
 
 import javax.swing.*;
 import java.awt.*;
@@ -29,6 +29,7 @@ public class MainCircles extends JFrame implements MouseListener {
         initApplication();
         setTitle("Circles");
         setVisible(true);
+        canvas.addMouseListener(this);
 
     }
 
@@ -54,11 +55,7 @@ public class MainCircles extends JFrame implements MouseListener {
 
     @Override
     public void mouseClicked(MouseEvent e) {
-        switch (e.getButton()) {
-            case BUTTON1 -> spriteHolder.addSprite(e.getPoint());
-            case BUTTON3 -> spriteHolder.removeLast();
-            default -> System.out.println(e.getButton());
-        }
+
     }
 
     @Override
@@ -68,7 +65,11 @@ public class MainCircles extends JFrame implements MouseListener {
 
     @Override
     public void mouseReleased(MouseEvent e) {
-
+        switch (e.getButton()) {
+            case BUTTON1 -> spriteHolder.addSprite(e.getPoint());
+            case BUTTON3 -> spriteHolder.removeLast();
+            default -> System.out.println(e.getButton());
+        }
     }
 
     @Override
