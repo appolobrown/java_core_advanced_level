@@ -1,15 +1,15 @@
-package ru.geekbrains.advancedjava.lesson1;
+package ru.geekbrains.advancedjava.lesson1.common;
 
 import javax.swing.*;
 import java.awt.*;
 
 public class GameCanvas extends JPanel {
 
-    private final MainCircles controller;
+    private final GameCanvasListener controller;
     long lastFrameTime;
     private static final int FPS_SLEEP_TIME = 17;
 
-    GameCanvas(MainCircles controller) {
+    public GameCanvas(GameCanvasListener controller) {
         this.controller = controller;
         lastFrameTime = System.nanoTime();
     }
