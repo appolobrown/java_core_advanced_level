@@ -25,12 +25,19 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
     private final JButton btnSend = new JButton("Send");
 
     private final JList<String> userList = new JList<>();
+    private ChatController chatController;
 
     private ClientGUI() {
+        chatController = new ChatController();
         Thread.setDefaultUncaughtExceptionHandler(this);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setSize(WIDTH, HEIGHT);
+        log.setEditable(false);
+        log.setLineWrap(true);
+        log.setWrapStyleWord(true);
+        btnSend.addActionListener(this);
+        tfMessage.addActionListener(this);
         JScrollPane scrollLog = new JScrollPane(log);
         JScrollPane scrollUser = new JScrollPane(userList);
         String[] users = {"user1", "user2", "user3", "user4", "user5",
@@ -71,11 +78,21 @@ public class ClientGUI extends JFrame implements ActionListener, Thread.Uncaught
         Object src = e.getSource();
         if (src == cbAlwaysOnTop) {
             setAlwaysOnTop(cbAlwaysOnTop.isSelected());
+        } else if (src == btnSend || src == tfMessage) {
+            sendMessage(tfMessage.getText());
         } else {
             throw new RuntimeException("Unknown action source: " + src);
         }
     }
 
+    private void sendMessage(String message) {
+        if (!message.isBlank()) {
+            String formatted = String.format("%s : %s \n", tfLogin.getText(), message);
+            log.append(formatted);
+            chatController.sendMessage(formatted);
+        }
+        tfMessage.setText("");
+    }
 
     @Override
     public void uncaughtException(Thread t, Throwable e) {
