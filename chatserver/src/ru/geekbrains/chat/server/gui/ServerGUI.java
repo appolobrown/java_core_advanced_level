@@ -1,4 +1,6 @@
-package ru.geekbrains.advancedjava.lesson4;
+package ru.geekbrains.chat.server.gui;
+
+import ru.geekbrains.chat.server.core.ChatServer;
 
 import javax.swing.*;
 import java.awt.*;

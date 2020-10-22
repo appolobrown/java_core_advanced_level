@@ -1,4 +1,4 @@
-package ru.geekbrains.advancedjava.lesson4;
+package ru.geekbrains.common;
 
 import java.io.File;
 import java.io.FileNotFoundException;
