@@ -9,16 +9,18 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Vector;
 
 public class ChatServer implements ServerSocketThreadListener, SocketThreadListener {
     private final DateFormat DATE_FORMAT = new SimpleDateFormat("HH:mm:ss: ");
-
+    private Vector<SocketThread> clientThreads;
     private ServerSocketThread server = null;
+
     public void start(int port) {
         if (server != null && server.isAlive()) {
             System.out.println("Server already started");
         } else {
-            server = new ServerSocketThread(this, "Chat server", 8189, 2000);
+            server = new ServerSocketThread(this, "Chat server", port, 2000);
         }
     }
 
@@ -38,18 +40,18 @@ public class ChatServer implements ServerSocketThreadListener, SocketThreadListe
 
     /**
      * Server methods
-     *
-     * */
+     */
 
     @Override
     public void onServerStart(ServerSocketThread thread) {
+        this.clientThreads = new Vector<>();
         putLog("Server thread started");
     }
 
     @Override
     public void onServerStop(ServerSocketThread thread) {
+        this.clientThreads = null;
         putLog("Server thread stopped");
-
     }
 
     @Override
@@ -68,8 +70,7 @@ public class ChatServer implements ServerSocketThreadListener, SocketThreadListe
     public void onSocketAccepted(ServerSocketThread thread, ServerSocket server, Socket socket) {
         putLog("Client connected");
         String name = "SocketThread " + socket.getInetAddress() + ":" + socket.getPort();
-        new SocketThread(name, this, socket);
-
+        clientThreads.add(new SocketThread(name, this, socket));
     }
 
     @Override
@@ -79,8 +80,7 @@ public class ChatServer implements ServerSocketThreadListener, SocketThreadListe
 
     /**
      * Socket methods
-     *
-     * */
+     */
 
     @Override
     public synchronized void onSocketStart(SocketThread thread, Socket socket) {
@@ -90,6 +90,7 @@ public class ChatServer implements ServerSocketThreadListener, SocketThreadListe
 
     @Override
     public synchronized void onSocketStop(SocketThread thread) {
+        clientThreads.remove(thread);
         putLog("Socket stopped");
 
     }
@@ -102,7 +103,7 @@ public class ChatServer implements ServerSocketThreadListener, SocketThreadListe
 
     @Override
     public synchronized void onReceiveString(SocketThread thread, Socket socket, String msg) {
-        thread.sendMessage("echo: " + msg);
+        clientThreads.forEach(socketThread -> socketThread.sendMessage(msg));
     }
 
     @Override
