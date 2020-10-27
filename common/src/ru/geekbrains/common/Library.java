@@ -43,7 +43,7 @@ public class Library {
 
     public static boolean isAuthRequestCorrect(String msg) {
         String[] arr = msg.split(DELIMITER);
-        return arr.length != AUTH_REQUEST_LENGTH ||
-                !arr[MSG_PREFIX].equals(AUTH_REQUEST);
+        return arr.length == AUTH_REQUEST_LENGTH &&
+                arr[MSG_PREFIX].equals(AUTH_REQUEST);
     }
 }

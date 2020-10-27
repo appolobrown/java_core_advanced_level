@@ -13,6 +13,11 @@ import java.awt.event.ActionListener;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.Socket;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+
+import static ru.geekbrains.common.Library.*;
 
 
 public class ClientGUI extends JFrame implements ActionListener,
@@ -20,6 +25,10 @@ public class ClientGUI extends JFrame implements ActionListener,
 
     private static final int WIDTH = 400;
     private static final int HEIGHT = 300;
+    private final String WELCOME_STRING = "Welcome,";
+    private final String AUTH_FAILED_STRING = "Auth failed";
+    public static final String PATTERN = "MM-dd HH:mm:ss";
+    SimpleDateFormat simpleDateFormat = new SimpleDateFormat(PATTERN);
 
     private final JTextArea log = new JTextArea();
     private final JPanel panelTop = new JPanel(new GridLayout(2, 3));
@@ -131,10 +140,39 @@ public class ClientGUI extends JFrame implements ActionListener,
 
     private void putLog(String msg) {
         if ("".equals(msg)) return;
+
         SwingUtilities.invokeLater(() -> {
-            log.append(msg + "\n");
+            log.append(parseMessage(msg) + "\n");
             log.setCaretPosition(log.getDocument().getLength());
         });
+    }
+
+    private String parseMessage(String msg) {
+        String[] arr = msg.split(DELIMITER);
+        StringBuilder parsed = new StringBuilder();
+        if (arr.length == 0) return parsed.toString();
+        switch (arr[0]) {
+            case AUTH_ACCEPT:
+                parsed.append(WELCOME_STRING).append(arr[1]);
+                break;
+            case AUTH_DENIED:
+                parsed.append(AUTH_FAILED_STRING);
+                break;
+            case TYPE_BROADCAST:
+                parsed.append(String.format("%s %s : %s",
+                        getTimeFormatted(arr[1]), arr[2], arr[3]));
+                break;
+            default:
+                parsed.append(msg);
+                break;
+        }
+        return parsed.toString();
+    }
+
+    private String getTimeFormatted(String s) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTimeInMillis(Long.parseLong(s));
+        return simpleDateFormat.format(cal.getTime());
     }
 
     private void showException(Thread t, Throwable e) {

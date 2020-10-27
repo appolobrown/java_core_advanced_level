@@ -7,6 +7,8 @@ import ru.geekbrains.network.SocketThreadListener;
 import java.io.IOException;
 import java.net.Socket;
 
+import static ru.geekbrains.common.Library.*;
+
 /*Так как в GUI накопилось логики и он стал загруженным, перенес
 не UI фичи сюда
 */
