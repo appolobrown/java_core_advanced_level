@@ -12,6 +12,8 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Vector;
 
+import static ru.geekbrains.common.Library.DELIMITER;
+
 public class ChatServer implements ServerSocketThreadListener, SocketThreadListener {
     private final DateFormat DATE_FORMAT = new SimpleDateFormat("HH:mm:ss: ");
 
@@ -27,7 +29,7 @@ public class ChatServer implements ServerSocketThreadListener, SocketThreadListe
         if (server != null && server.isAlive()) {
             putLog("Server already started");
         } else {
-            server = new ServerSocketThread(this, "Chat server", 8189, 2000);
+            server = new ServerSocketThread(this, "Chat server", port, 2000);
         }
     }
 
@@ -118,12 +120,12 @@ public class ChatServer implements ServerSocketThreadListener, SocketThreadListe
     }
 
     private void handleNonAuthorizedMessage(ClientThread client, String msg) {
-        String[] arr = msg.split(Library.DELIMITER);
-        if (arr.length != Library.AUTH_REQUEST_LENGTH ||
-                !arr[Library.MSG_PREFIX].equals(Library.AUTH_REQUEST)) {
+
+        if (!Library.isAuthRequestCorrect(msg)) {
             client.msgFormatError(msg);
             return;
         }
+        String[] arr = msg.split(DELIMITER);
         String login = arr[1];
         String password = arr[2];
         String nickname = SqlClient.getNickname(login, password);
