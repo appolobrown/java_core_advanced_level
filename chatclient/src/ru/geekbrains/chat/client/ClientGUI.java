@@ -1,5 +1,6 @@
 package ru.geekbrains.chat.client;
 
+import ru.geekbrains.common.Library;
 import ru.geekbrains.network.SocketThread;
 import ru.geekbrains.network.SocketThreadListener;
 
@@ -61,10 +62,10 @@ public class ClientGUI extends JFrame implements ActionListener,
         panelTop.add(tfLogin);
         panelTop.add(tfPassword);
         panelTop.add(btnLogin);
-
         panelBottom.add(btnDisconnect, BorderLayout.WEST);
         panelBottom.add(tfMessage, BorderLayout.CENTER);
         panelBottom.add(btnSend, BorderLayout.EAST);
+        panelBottom.setVisible(false);
 
         add(scrollLog, BorderLayout.CENTER);
         add(scrollUser, BorderLayout.EAST);
@@ -72,7 +73,6 @@ public class ClientGUI extends JFrame implements ActionListener,
         add(panelBottom, BorderLayout.SOUTH);
 
         setVisible(true);
-        setPanelsVisibility();
     }
 
     public static void main(String[] args) {
@@ -93,26 +93,11 @@ public class ClientGUI extends JFrame implements ActionListener,
             sendMessage();
         } else if (src == btnLogin) {
             connect();
-            setPanelsVisibility();
         } else if (src == btnDisconnect) {
-            disconnect();
-            setPanelsVisibility();
+            socketThread.close();
         } else {
             showException(Thread.currentThread(), new RuntimeException("Unknown action source: " + src));
         }
-    }
-
-    private void disconnect() {
-        if (socketThread != null) {
-            socketThread.close();
-            socketThread = null;
-        }
-    }
-
-    private void setPanelsVisibility() {
-        boolean connected = socketThread != null;
-        panelTop.setVisible(!connected);
-        panelBottom.setVisible(connected);
     }
 
     private void connect() {
@@ -122,7 +107,6 @@ public class ClientGUI extends JFrame implements ActionListener,
         } catch (IOException e) {
             showException(Thread.currentThread(), e);
         }
-
     }
 
     private void sendMessage() {
@@ -181,7 +165,7 @@ public class ClientGUI extends JFrame implements ActionListener,
 
     /**
      * Socket thread listener methods
-     */
+     * */
 
     @Override
     public void onSocketStart(SocketThread thread, Socket socket) {
@@ -190,12 +174,17 @@ public class ClientGUI extends JFrame implements ActionListener,
 
     @Override
     public void onSocketStop(SocketThread thread) {
-        putLog("Stop");
+        panelBottom.setVisible(false);
+        panelTop.setVisible(true);
     }
 
     @Override
     public void onSocketReady(SocketThread thread, Socket socket) {
-        putLog("Ready");
+        panelBottom.setVisible(true);
+        panelTop.setVisible(false);
+        String login = tfLogin.getText();
+        String password = new String(tfPassword.getPassword());
+        thread.sendMessage(Library.getAuthRequest(login, password));
     }
 
     @Override
