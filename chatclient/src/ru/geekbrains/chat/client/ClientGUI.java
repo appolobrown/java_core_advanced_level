@@ -1,5 +1,7 @@
 package ru.geekbrains.chat.client;
 
+import ru.geekbrains.chat.client.core.Client;
+import ru.geekbrains.chat.client.core.ClientListener;
 import ru.geekbrains.common.Library;
 import ru.geekbrains.network.SocketThread;
 import ru.geekbrains.network.SocketThreadListener;
@@ -11,13 +13,22 @@ import java.awt.event.ActionListener;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.Socket;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+
+import static ru.geekbrains.common.Library.*;
 
 
 public class ClientGUI extends JFrame implements ActionListener,
-        Thread.UncaughtExceptionHandler, SocketThreadListener {
+        Thread.UncaughtExceptionHandler, ClientListener {
 
     private static final int WIDTH = 400;
     private static final int HEIGHT = 300;
+    private final String WELCOME_STRING = "Welcome,";
+    private final String AUTH_FAILED_STRING = "Auth failed";
+    public static final String PATTERN = "MM-dd HH:mm:ss";
+    SimpleDateFormat simpleDateFormat = new SimpleDateFormat(PATTERN);
 
     private final JTextArea log = new JTextArea();
     private final JPanel panelTop = new JPanel(new GridLayout(2, 3));
@@ -35,9 +46,10 @@ public class ClientGUI extends JFrame implements ActionListener,
 
     private final JList<String> userList = new JList<>();
     private boolean shownIoErrors = false;
-    private SocketThread socketThread;
+    private Client client;
 
     private ClientGUI() {
+        client = new Client(this);
         Thread.setDefaultUncaughtExceptionHandler(this);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
@@ -46,9 +58,8 @@ public class ClientGUI extends JFrame implements ActionListener,
         log.setLineWrap(true);
         JScrollPane scrollLog = new JScrollPane(log);
         JScrollPane scrollUser = new JScrollPane(userList);
-        String[] users = {"user1", "user2", "user3", "user4", "user5",
-                "user_with_an_exceptionally_long_name_in_this_chat"};
-        userList.setListData(users);
+
+        userList.setListData(client.getUsers());
         scrollUser.setPreferredSize(new Dimension(100, 0));
         cbAlwaysOnTop.addActionListener(this);
         btnSend.addActionListener(this);
@@ -76,12 +87,7 @@ public class ClientGUI extends JFrame implements ActionListener,
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                new ClientGUI();
-            }
-        });
+        SwingUtilities.invokeLater(ClientGUI::new);
     }
 
     @Override
@@ -94,7 +100,7 @@ public class ClientGUI extends JFrame implements ActionListener,
         } else if (src == btnLogin) {
             connect();
         } else if (src == btnDisconnect) {
-            socketThread.close();
+            client.disconnect();
         } else {
             showException(Thread.currentThread(), new RuntimeException("Unknown action source: " + src));
         }
@@ -102,8 +108,10 @@ public class ClientGUI extends JFrame implements ActionListener,
 
     private void connect() {
         try {
-            Socket socket = new Socket(tfIPAddress.getText(), Integer.parseInt(tfPort.getText()));
-            socketThread = new SocketThread("Client", this, socket);
+            client.connect(tfIPAddress.getText(),
+                    tfPort.getText(),
+                    tfLogin.getText(),
+                    new String(tfPassword.getPassword()));
         } catch (IOException e) {
             showException(Thread.currentThread(), e);
         }
@@ -115,9 +123,7 @@ public class ClientGUI extends JFrame implements ActionListener,
         if ("".equals(msg)) return;
         tfMessage.setText(null);
         tfMessage.grabFocus();
-//        putLog(String.format("%s: %s", username, msg));
-//        wrtMsgToLogFile(msg, username);
-        socketThread.sendMessage(msg);
+        client.sendMessage(msg);
     }
 
     private void wrtMsgToLogFile(String msg, String username) {
@@ -134,13 +140,39 @@ public class ClientGUI extends JFrame implements ActionListener,
 
     private void putLog(String msg) {
         if ("".equals(msg)) return;
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                log.append(msg + "\n");
-                log.setCaretPosition(log.getDocument().getLength());
-            }
+
+        SwingUtilities.invokeLater(() -> {
+            log.append(parseMessage(msg) + "\n");
+            log.setCaretPosition(log.getDocument().getLength());
         });
+    }
+
+    private String parseMessage(String msg) {
+        String[] arr = msg.split(DELIMITER);
+        StringBuilder parsed = new StringBuilder();
+        if (arr.length == 0) return parsed.toString();
+        switch (arr[0]) {
+            case AUTH_ACCEPT:
+                parsed.append(WELCOME_STRING).append(arr[1]);
+                break;
+            case AUTH_DENIED:
+                parsed.append(AUTH_FAILED_STRING);
+                break;
+            case TYPE_BROADCAST:
+                parsed.append(String.format("%s %s : %s",
+                        getTimeFormatted(arr[1]), arr[2], arr[3]));
+                break;
+            default:
+                parsed.append(msg);
+                break;
+        }
+        return parsed.toString();
+    }
+
+    private String getTimeFormatted(String s) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTimeInMillis(Long.parseLong(s));
+        return simpleDateFormat.format(cal.getTime());
     }
 
     private void showException(Thread t, Throwable e) {
@@ -163,38 +195,25 @@ public class ClientGUI extends JFrame implements ActionListener,
         System.exit(1);
     }
 
-    /**
-     * Socket thread listener methods
-     * */
-
     @Override
-    public void onSocketStart(SocketThread thread, Socket socket) {
-        putLog("Start");
+    public void onClientReady() {
+        panelBottom.setVisible(true);
+        panelTop.setVisible(false);
     }
 
     @Override
-    public void onSocketStop(SocketThread thread) {
+    public void onDisconnect() {
         panelBottom.setVisible(false);
         panelTop.setVisible(true);
     }
 
     @Override
-    public void onSocketReady(SocketThread thread, Socket socket) {
-        panelBottom.setVisible(true);
-        panelTop.setVisible(false);
-        String login = tfLogin.getText();
-        String password = new String(tfPassword.getPassword());
-        thread.sendMessage(Library.getAuthRequest(login, password));
+    public void onMessage(String message) {
+        putLog(message);
     }
 
     @Override
-    public void onReceiveString(SocketThread thread, Socket socket, String msg) {
-        putLog(msg);
-    }
+    public void onClientException(SocketThread thread, Exception exception) {
 
-    @Override
-    public void onSocketException(SocketThread thread, Exception exception) {
-        showException(thread, exception);
     }
-
 }
