@@ -6,11 +6,16 @@ import ru.geekbrains.network.ServerSocketThreadListener;
 import ru.geekbrains.network.SocketThread;
 import ru.geekbrains.network.SocketThreadListener;
 
+import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Vector;
+import java.util.logging.FileHandler;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static ru.geekbrains.common.Library.DELIMITER;
 
@@ -20,9 +25,19 @@ public class ChatServer implements ServerSocketThreadListener, SocketThreadListe
     private ServerSocketThread server = null;
     private final ChatServerListener listener;
     private final Vector<SocketThread> clients = new Vector<>();
+    private Logger logger;
 
     public ChatServer(ChatServerListener listener) {
         this.listener = listener;
+        Handler handler = null;
+        try {
+            handler = new FileHandler("useful.log", true);
+            handler.setLevel(Level.ALL);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        logger = Logger.getLogger(ChatServer.class.getName());
+        if (handler != null) logger.addHandler(handler);
     }
 
     public void start(int port) {
@@ -45,6 +60,7 @@ public class ChatServer implements ServerSocketThreadListener, SocketThreadListe
         msg = DATE_FORMAT.format(System.currentTimeMillis()) +
                 Thread.currentThread().getName() + ": " + msg;
         listener.onChatServerMessage(msg);
+        logger.log(Level.INFO, msg);
     }
 
     /**
